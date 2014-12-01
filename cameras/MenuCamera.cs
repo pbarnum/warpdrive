@@ -35,6 +35,7 @@ public class MenuCamera : MonoBehaviour
         _menuList[2] = new menu(GameObject.Find("playObject"), 1);
         _menuList[3] = new menu(GameObject.Find("settingsObject"), 1);
         _menuList[4] = new menu(GameObject.Find("levelsObject"), 2);
+        _menuList[5] = new menu(GameObject.Find("shipObject"), 1);
 
 	}
 	
@@ -61,11 +62,15 @@ public class MenuCamera : MonoBehaviour
 					case "playButton":
 						_currentMenu = 2;
                         _moveMenu();
-						break;
-					case "infoButton":
-						_currentMenu = 3;
-						_moveMenu();
-						break;
+                        break;
+                    case "shipButton":
+                        _currentMenu = 5;
+                        _moveMenu();
+                        break;
+                    case "infoButton":
+                        _currentMenu = 3;
+                        _moveMenu();
+                        break;
 					case "exitButton":
 						_currentMenu = 0;
 						_moveMenu();
@@ -133,8 +138,8 @@ public class MenuCamera : MonoBehaviour
         // Rotate old
         _menuList[_lastMenu].go.GetComponent<MenuRotate>().rotate = true;
 
-        // Rotate new
-        StartCoroutine(_menuList[_currentMenu].go.GetComponent<MenuRotate>().setLerp());
+        // Lerp new
+        _menuList[_currentMenu].go.GetComponent<MenuRotate>().lerp = true;
     }
 
     public int getCurrentMenu()

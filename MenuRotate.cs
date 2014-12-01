@@ -5,8 +5,7 @@ public class MenuRotate : MonoBehaviour
 {
     private GameObject planet;
     public bool rotate;
-    private bool check = false;
-    private bool lerp = false;
+    public bool lerp;
     private Vector3 lerpTo = new Vector3(-10.93764f, -0.01740861f, 30.38736f);
 
 	// Use this for initialization
@@ -14,24 +13,26 @@ public class MenuRotate : MonoBehaviour
     {
         planet = GameObject.Find("Planet");
         rotate = false;
+        lerp = false;
 	}
 	
 	// Update is called once per frame
 	void Update ()
     {
+        // If old menu, rotate around planet
 	    if(rotate)
         {
             this.transform.RotateAround(planet.transform.position, planet.transform.up, 75 * Time.deltaTime);
 
             if (this.transform.eulerAngles.y >= 105f && this.transform.eulerAngles.y <= 115f)
             {
+                rotate = false;
                 this.transform.position = new Vector3(-10.93764f, -0.01740861f, -8.705765f);
                 this.transform.eulerAngles = new Vector3(0, 0, 0);
-                rotate = false;
-                check = false;
             }
         }
 
+        // If new menu, lerp it into view 
         if(lerp)
         {
             this.transform.position = Vector3.Lerp(this.transform.position, lerpTo, 3 * Time.deltaTime);
@@ -44,12 +45,12 @@ public class MenuRotate : MonoBehaviour
         }
 	}
 
+    // Snap the menu into place before moving it.
     public void snap(bool newObj)
     {
         if(newObj)
         {
             rotate = false;
-            check = false;
             this.transform.position = new Vector3(-10.93764f, -0.01740861f, -8.705765f);
             this.transform.eulerAngles = new Vector3(0, 0, 0);
         }
@@ -58,12 +59,6 @@ public class MenuRotate : MonoBehaviour
             lerp = false;
             this.transform.position = lerpTo;
         }
-    }
-
-    public IEnumerator setLerp()
-    {
-        yield return new WaitForSeconds(1);
-        lerp = true;
     }
 
 }
