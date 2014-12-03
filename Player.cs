@@ -10,10 +10,6 @@ public class Player : MonoBehaviour
     private Component[] children; // Ship's particle system
 	
 	private float _laneDistance = 1.5f;
-	private bool[] _lanes = new bool[7]
-	{
-		false,false,false,false,false,false,false
-	};
 	private int _currentLane = 3;
 	private GameObject _newLane;
 	private bool _changingLane = false;
@@ -37,6 +33,7 @@ public class Player : MonoBehaviour
     private float _strafeSpeed;
     private float _currentSpeed;
 
+    private bool _dead = false;
 	private bool _paused = false;
 	public bool paused
 	{
@@ -87,20 +84,17 @@ public class Player : MonoBehaviour
         _warping = false;
         _warpCooldown = false;
 		_currentSpeed = _ship.baseSpeed;
-		
-		// Only set the middle lane true before game starts
-		doSetLane(7, true);
 	}
 	
 	// Update is called once per frame
 	void Update()
 	{
         // Listen for pause button
-        if (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.E))
+        if (!_dead && (Input.GetKeyDown(KeyCode.Escape) || Input.GetKeyDown(KeyCode.E)))
             pauseGame();
 		
         // Moving forward
-		if(!_paused)
+		if(!_paused && !_dead)
         {
             if (Input.GetKey(KeyCode.Space) && !_warpCooldown)
             {
@@ -167,12 +161,21 @@ public class Player : MonoBehaviour
                 _movingForward = true;
             }
         }
+        else if (other.tag == "soft" && !_warping) // Hit soft object, watch yo self!
+        {
+            --_ship.playerHealth;
+            if (_ship.playerHealth == 0)
+            {
+                _death();
+            }
+        }
         else if (other.tag == "rightTurn") // Hit right turn
         {
             if (_levelManager.infinite)
                 _levelManager.addSegment();
 
             --segs;
+            _movingForward = false;
 
             _rotAround = other.transform.parent.FindChild("rotAroundObj").transform;
             this.transform.parent = _rotAround;
@@ -180,7 +183,6 @@ public class Player : MonoBehaviour
             // Start turn, stop all other movement
             _turnRight = true;
             _turnLeft = false;
-            _movingForward = false;
         }
         else if (other.tag == "leftTurn") // Hit left turn
         {
@@ -188,6 +190,7 @@ public class Player : MonoBehaviour
                 _levelManager.addSegment();
 
             --segs;
+            _movingForward = false;
 
             _rotAround = other.transform.parent.FindChild("rotAroundObj").transform;
             this.transform.parent = _rotAround;
@@ -195,11 +198,10 @@ public class Player : MonoBehaviour
             // Start turn, stop all other movement
             _turnLeft = true;
             _turnRight = false;
-            _movingForward = false;
         }
         else if (other.tag == "finish") // Hit the finish line!
         {
-            _paused = true;
+            _death();
         }
     }
 
@@ -209,10 +211,6 @@ public class Player : MonoBehaviour
 		{
             // Call the death method
             _death();
-		}
-        else if (other.tag == "soft" && !_warping) // Hit soft object, watch yo self!
-		{
-
 		}
         else if(other.tag == "hole") // Player fell through the ground
         {
@@ -239,6 +237,7 @@ public class Player : MonoBehaviour
     private void _death()
     {
         _paused = true;
+        _dead = true;
         _gameOver.SetActive(true);
         _levelManager.saveTime();
     }
@@ -279,7 +278,7 @@ public class Player : MonoBehaviour
 
         if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D))
 		{
-			if(_currentLane == _lanes.Length - 1)
+			if(_currentLane == 6)
 			{
 				Debug.Log("Can't move right.");
 			}
@@ -301,35 +300,6 @@ public class Player : MonoBehaviour
 			}
 		}
 
-	}
-
-	/**
-	 * public void doSetLane ( int, bool )
-	 * 
-	 * @description
-	 * Sets the lane(s) provided to the set condition.
-	 * This tells the game if the player can travel the lane or fall through.
-	 * 
-	 * @param index {int} Lane to be changed
-	 * @param condition {bool} Turn the lane on or off
-	 */
-	public void doSetLane(int index, bool condition)
-	{
-		if (index >= _lanes.Length)
-		{
-			for (int i = 0; i < _lanes.Length; ++i)
-			{
-				_lanes [i] = condition;
-			}
-		}
-		else if (index >= 0 && index < _lanes.Length)
-		{
-			_lanes [index] = condition;
-		}
-		else
-		{
-			Debug.Log("Player.cs@doSetLane(int,bool): Lane index out of range! index == " + index);
-		}
 	}
 	
 	/**
