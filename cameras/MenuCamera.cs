@@ -14,15 +14,42 @@ public class MenuCamera : MonoBehaviour
 		}
 	};
 
-	private menu[] _menuList = new menu[5];
+	private menu[] _menuList = new menu[6];
 	private int _currentMenu;
     private int _lastMenu;
+    private GameObject _ship;
+    private Material[] textures;
+    private int selTex;
+    private int oldTex;
 
 	// Use this for initialization
 	void Start ()
 	{
         // Play ship's idle animation
+        _ship = GameObject.Find("LiftOff:Ship");
         GameObject.Find("Ship").GetComponent<Animator>().Play("idle");
+
+        textures = Resources.LoadAll<Material>("ship");
+        if (PlayerPrefs.HasKey("material"))
+        {
+            _ship.renderer.material = Resources.Load<Material>("ship/" + PlayerPrefs.GetString("material"));
+            for(int i = 0; i < textures.Length; ++i)
+            {
+                if (textures[i].name == PlayerPrefs.GetString("material"))
+                    selTex = i;
+            }
+            string tmp = textures[selTex].name.ToString();
+            tmp = tmp.Substring(tmp.IndexOf('_') + 1);
+            GameObject.Find("colorText").GetComponent<TextMesh>().text = tmp;
+        }
+        else
+        {
+            _ship.renderer.material = Resources.Load<Material>("ship/ShipDiffuse_Red");
+            selTex = 5;
+            string tmp = textures[selTex].name.ToString();
+            tmp = tmp.Substring(tmp.IndexOf('_') + 1);
+            GameObject.Find("colorText").GetComponent<TextMesh>().text = tmp;
+        }
 
 		_initMenu ();
         _currentMenu = 1;
@@ -65,6 +92,7 @@ public class MenuCamera : MonoBehaviour
                         break;
                     case "shipButton":
                         _currentMenu = 5;
+                        oldTex = selTex; // Save the old texture
                         _moveMenu();
                         break;
                     case "infoButton":
@@ -77,28 +105,45 @@ public class MenuCamera : MonoBehaviour
 						break;
 					case "confirmButton":
 						Debug.Log("Game has been quit (but not for this demo)");
-						doBackMenuLevel();
-						//Application.Quit();
+						//doBackMenuLevel();
+						Application.Quit();
 						break;
 					case "cancelButton":
+                        selTex = oldTex;
+                        _ship.renderer.material = textures[selTex];
+                        string tmp = textures[selTex].name.ToString();
+                        tmp = tmp.Substring(tmp.IndexOf('_') + 1);
+                        GameObject.Find("colorText").GetComponent<TextMesh>().text = tmp;
 						doBackMenuLevel();
-						break;
-					case "saveButton":
-						Debug.Log("Saved Settings (but not really)");
-						doBackMenuLevel();
-						break;
+                        break;
+                    case "saveButton":
+                        doBackMenuLevel();
+                        break;
+                    case "leftButton":
+                        _changeTex(false);
+                        break;
+                    case "rightButton":
+                        _changeTex(true);
+                        break;
 					case "levelsButton":
                         _currentMenu = 4;
                         _moveMenu();
 						break;
 					case "infiniteButton":
+                        PlayerPrefs.SetString("material", textures[selTex].name.ToString());
 						Application.LoadLevel("infinity");
                         break;
                     case "level1Button":
+                        PlayerPrefs.SetString("material", textures[selTex].name.ToString());
                         Application.LoadLevel("level_01");
                         break;
                     case "level2Button":
+                        PlayerPrefs.SetString("material", textures[selTex].name.ToString());
                         Application.LoadLevel("level_02");
+                        break;
+                    case "level3Button":
+                        PlayerPrefs.SetString("material", textures[selTex].name.ToString());
+                        Application.LoadLevel("level_03");
                         break;
 					/*case "retryButton":
                         Application.LoadLevel("infinity");
@@ -140,6 +185,38 @@ public class MenuCamera : MonoBehaviour
 
         // Lerp new
         _menuList[_currentMenu].go.GetComponent<MenuRotate>().lerp = true;
+    }
+    
+    private void _changeTex(bool right)
+    {
+        if(right)
+        {
+            if (selTex == textures.Length - 1)
+            {
+                selTex = 0;
+                _ship.renderer.material = textures[0];
+            }
+            else
+            {
+                _ship.renderer.material = textures[++selTex];
+            }
+        }
+        else
+        {
+            if (selTex == 0)
+            {
+                selTex = textures.Length - 1;
+                _ship.renderer.material = textures[textures.Length - 1];
+            }
+            else
+            {
+                _ship.renderer.material = textures[--selTex];
+            }
+        }
+
+        string tmp = textures[selTex].name.ToString();
+        tmp = tmp.Substring(tmp.IndexOf('_') + 1);
+        GameObject.Find("colorText").GetComponent<TextMesh>().text = tmp;
     }
 
     public int getCurrentMenu()
