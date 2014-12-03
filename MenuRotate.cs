@@ -27,7 +27,7 @@ public class MenuRotate : MonoBehaviour
             if (this.transform.eulerAngles.y >= 105f && this.transform.eulerAngles.y <= 115f)
             {
                 rotate = false;
-                this.transform.position = new Vector3(-10.93764f, -0.01740861f, -8.705765f);
+                this.transform.position = new Vector3(-10.93764f, -0.01740861f, -35.42116f);
                 this.transform.eulerAngles = new Vector3(0, 0, 0);
             }
         }
