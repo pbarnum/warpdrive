@@ -9,7 +9,7 @@ public class GameCamera : MonoBehaviour
 	// Use this for initialization
 	void Start ()
 	{
-		thisCam = GetComponent<Camera> ();
+		thisCam = this.GetComponent<Camera> ();
         _gameOver = this.transform.FindChild("gameOver").gameObject;
 	}
 	
