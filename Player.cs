@@ -32,6 +32,13 @@ public class Player : MonoBehaviour
 
     private float _strafeSpeed;
     private float _currentSpeed;
+    public float currentSpeed
+    {
+        get
+        {
+            return _currentSpeed;
+        }
+    }
 
     private bool _dead = false;
 	private bool _paused = false;
