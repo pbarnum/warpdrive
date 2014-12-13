@@ -21,10 +21,13 @@ public class MenuCamera : MonoBehaviour
     private Material[] textures;
     private int selTex;
     private int oldTex;
+    private bool noSplash;
 
 	// Use this for initialization
 	void Start ()
 	{
+        noSplash = false;
+
         // Play ship's idle animation
         _ship = GameObject.Find("LiftOff:Ship");
         GameObject.Find("Ship").GetComponent<Animator>().Play("idle");
@@ -70,6 +73,16 @@ public class MenuCamera : MonoBehaviour
 	void Update()
 	{
 		buttonInput ();
+
+        if(noSplash)
+        {
+            this.transform.position = Vector3.Lerp(this.transform.position, Vector3.zero, Time.deltaTime * 2);
+
+            if(Vector3.Distance(this.transform.position, Vector3.zero) <= 0.01f)
+            {
+                noSplash = false;
+            }
+        }
     }
 
 	private void buttonInput()
@@ -85,9 +98,12 @@ public class MenuCamera : MonoBehaviour
                     Debug.Log(hit.transform.name);
                     _lastMenu = _currentMenu;
 					switch(hit.transform.name)
-					{
-					case "playButton":
-						_currentMenu = 2;
+                    {
+                    case "splash":
+                        noSplash = true;
+                        break;
+                    case "playButton":
+                        _currentMenu = 2;
                         _moveMenu();
                         break;
                     case "shipButton":
@@ -132,6 +148,10 @@ public class MenuCamera : MonoBehaviour
 					case "infiniteButton":
                         PlayerPrefs.SetString("material", textures[selTex].name.ToString());
 						Application.LoadLevel("infinity");
+                        break;
+                    case "tutorialButton":
+                        PlayerPrefs.SetString("material", textures[selTex].name.ToString());
+						Application.LoadLevel("tutorial");
                         break;
                     case "level1Button":
                         PlayerPrefs.SetString("material", textures[selTex].name.ToString());
