@@ -5,10 +5,15 @@ public class GameCamera : MonoBehaviour
 {
 	private Camera thisCam;
     private GameObject _gameOver;
+    private Player _player;
+    private Vector3 _origPos;
+    private Vector3 _warpPos = new Vector3(0, 0.6351723f, -1.788481f);
 
 	// Use this for initialization
 	void Start ()
 	{
+        _origPos = new Vector3(0, 1.069077f, -1.327867f);
+        _player = GameObject.Find("Ship").GetComponent<Player>();
 		thisCam = this.GetComponent<Camera> ();
         _gameOver = this.transform.FindChild("gameOver").gameObject;
 	}
@@ -17,6 +22,18 @@ public class GameCamera : MonoBehaviour
 	void Update ()
 	{
 		buttonInput ();
+
+        if (!_player.paused)
+        {
+            if (_player.warping)
+            {
+                Camera.main.transform.localPosition = Vector3.Lerp(Camera.main.transform.localPosition, _warpPos, Time.deltaTime);
+            }
+            else
+            {
+                Camera.main.transform.localPosition = Vector3.Lerp(Camera.main.transform.localPosition, _origPos, Time.deltaTime * 2);
+            }
+        }
 	}
 
 	private void buttonInput()
