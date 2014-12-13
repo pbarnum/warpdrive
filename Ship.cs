@@ -22,11 +22,11 @@ public class Ship : MonoBehaviour
 
         if(PlayerPrefs.HasKey("material"))
         {
-            this.transform.FindChild("LiftOff:Ship").renderer.material = Resources.Load<Material>("ship/" + PlayerPrefs.GetString("material"));
+            GameObject.Find("LiftOff:Ship").renderer.material = Resources.Load<Material>("ship/" + PlayerPrefs.GetString("material"));
         }
         else
         {
-            this.transform.FindChild("LiftOff:Ship").renderer.material = Resources.Load<Material>("ship/ShipDiffuse_Red");
+            GameObject.Find("LiftOff:Ship").renderer.material = Resources.Load<Material>("ship/ShipDiffuse_Red");
         }
 	}
 	
