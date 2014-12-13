@@ -21,9 +21,19 @@ public class Player : MonoBehaviour
 	private Vector3 slerpPos;
 
 	private Ship _ship;
-
+    
     private bool _warping;
+    public bool warping
+    {
+        get
+        {
+            return _warping;
+        }
+    }
     private bool _warpCooldown;
+    private GameObject _warpDanger;
+    private float _tmpTime;
+    private bool _timeFlip = false;
 
 	private int segs = 5;
     private int _leftTurns;
@@ -31,6 +41,7 @@ public class Player : MonoBehaviour
     private const int COOL_DOWN = 5;
 
     private float _strafeSpeed;
+    private float _movingSpeed;
     private float _currentSpeed;
     public float currentSpeed
     {
@@ -58,6 +69,8 @@ public class Player : MonoBehaviour
     {
         yield return new WaitForSeconds(3.5f);
         _paused = false;
+
+        _ship.animator.speed = 1;
         
         children = this.GetComponentsInChildren<ParticleSystem>();
         foreach (ParticleSystem ps in children)
@@ -86,11 +99,13 @@ public class Player : MonoBehaviour
         _ship = this.GetComponent<Ship>();
 
         _warpBar = GameObject.Find("warpFront");
+        _warpDanger = GameObject.Find("warpMid");
 
 		_strafeSpeed = _ship.baseStrafe;
         _warping = false;
         _warpCooldown = false;
-		_currentSpeed = _ship.baseSpeed;
+        _movingSpeed = _ship.baseSpeed;
+        _currentSpeed = _ship.baseSpeed;
 	}
 	
 	// Update is called once per frame
@@ -143,12 +158,38 @@ public class Player : MonoBehaviour
                     _currentSpeed = _ship.baseSpeed;
 			    }
 		    }
+
+            if (_warpCooldown)
+            {
+                if(Time.time - _tmpTime > 0.3f)
+                {
+                    _timeFlip = !_timeFlip;
+                    _tmpTime = Time.time;
+                    
+                    if (_timeFlip)
+                    {
+                        // Back
+                        _warpDanger.transform.localPosition = new Vector3(-1.730573f, 4.1f, 4.296598f);
+                    }
+                    else
+                    {
+                        // Front
+                        _warpDanger.transform.localPosition = new Vector3(-1.730573f, 4.1f, 3.926531f);
+                    }
+                }
+            }
+            else
+            {
+                // Back
+                _timeFlip = false;
+                _warpDanger.transform.localPosition = new Vector3(-1.730573f, 4.1f, 4.296598f);
+            }
 		}
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "triggerSegment" && other.transform.parent.FindChild("rotAroundObj") == null) // Hit trigger, add a seg
+        if (other.tag == "triggerSegment" && other.transform.parent.FindChild("rotAroundObj") == null) // Hit trigger, add a straight
         {
             if (_levelManager.infinite)
                 _levelManager.addSegment();
@@ -170,6 +211,7 @@ public class Player : MonoBehaviour
         }
         else if (other.tag == "soft" && !_warping) // Hit soft object, watch yo self!
         {
+            _ship.animator.Play("soft");
             --_ship.playerHealth;
             if (_ship.playerHealth == 0)
             {
@@ -208,6 +250,7 @@ public class Player : MonoBehaviour
         }
         else if (other.tag == "finish") // Hit the finish line!
         {
+            _levelManager.saveTime();
             _death();
         }
     }
@@ -215,7 +258,9 @@ public class Player : MonoBehaviour
 	void OnTriggerStay(Collider other)
 	{
 		if(other.tag == "hard" && !_warping) // Hit hard object, you dead son!
-		{
+        {
+            //this.transform.FindChild("LiftOff:Ship").gameObject.SetActive(false);
+
             // Call the death method
             _death();
 		}
@@ -223,6 +268,8 @@ public class Player : MonoBehaviour
         {
             this.GetComponent<Rigidbody>().useGravity = true;
             Camera.main.transform.parent = null;
+
+            this.transform.FindChild("sunlight").transform.parent = null;
 
             // Invoke the death method after 1 second
             Invoke("_death", 1);
@@ -245,8 +292,14 @@ public class Player : MonoBehaviour
     {
         _paused = true;
         _dead = true;
+        Camera.main.GetComponent<CamShake>().enabled = false;
+        _ship.animator.Play("dead");
         _gameOver.SetActive(true);
-        _levelManager.saveTime();
+
+        if (_levelManager.infinite)
+        {
+            _levelManager.saveTime();
+        }
     }
 
 	/*
@@ -254,7 +307,7 @@ public class Player : MonoBehaviour
 	 */
 	private void _moveForward()
 	{
-		this.transform.position += this.transform.forward * Time.deltaTime * _currentSpeed;
+        this.transform.position += this.transform.forward * Time.deltaTime * _movingSpeed;
 	}
 
 	private void _listenForMovement()
@@ -346,6 +399,8 @@ public class Player : MonoBehaviour
     {
         if (_warping && !_warpCooldown)
         {
+            _movingSpeed = _currentSpeed * 1.5f;
+
             _warpBar.transform.localScale = new Vector3(
                 _warpBar.transform.localScale.x,
                 _warpBar.transform.localScale.y,
@@ -357,15 +412,30 @@ public class Player : MonoBehaviour
             {
                 _warping = false;
                 _warpCooldown = true;
+
+                _tmpTime = Time.time;
             }
         }
         else
         {
-            _warpBar.transform.localScale = new Vector3(
-                _warpBar.transform.localScale.x,
-                _warpBar.transform.localScale.y,
-                Mathf.MoveTowards(_warpBar.transform.localScale.z, _ship.maxWarp, 0.25f * Time.deltaTime)
-            );
+            _movingSpeed = _currentSpeed;
+
+            if (_warpCooldown)
+            {
+                _warpBar.transform.localScale = new Vector3(
+                    _warpBar.transform.localScale.x,
+                    _warpBar.transform.localScale.y,
+                    Mathf.MoveTowards(_warpBar.transform.localScale.z, _ship.maxWarp, 0.25f * Time.deltaTime * 2)
+                );
+            }
+            else
+            {
+                _warpBar.transform.localScale = new Vector3(
+                    _warpBar.transform.localScale.x,
+                    _warpBar.transform.localScale.y,
+                    Mathf.MoveTowards(_warpBar.transform.localScale.z, _ship.maxWarp, 0.25f * Time.deltaTime)
+                );
+            }
 
             if (_warpBar.transform.localScale.z >= _ship.maxWarp && _warpCooldown)
             {
@@ -376,12 +446,12 @@ public class Player : MonoBehaviour
 	
 	private void _doTurnRight()
 	{
-		_rotAround.Rotate (_rotAround.up * (_currentSpeed * 4 * Time.deltaTime));
+		_rotAround.Rotate (_rotAround.up * (_movingSpeed * 4 * Time.deltaTime));
 	}
 	
 	private void _doTurnLeft()
     {
-        _rotAround.Rotate(-_rotAround.up * (_currentSpeed * 4 * Time.deltaTime));
+        _rotAround.Rotate(-_rotAround.up * (_movingSpeed * 4 * Time.deltaTime));
 	}
 	
 	private void _reposition(Transform track)
@@ -471,6 +541,8 @@ public class Player : MonoBehaviour
         else
         {
             _paused = true;
+
+            _ship.animator.speed = 0;
 
             children = this.GetComponentsInChildren<ParticleSystem>();
             foreach (ParticleSystem ps in children)
