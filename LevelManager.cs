@@ -65,10 +65,17 @@ public class LevelManager : MonoBehaviour
 	void Update ()
 	{
 		if(!player.paused)
-			_timer += Time.deltaTime;
+        {
+            _timer += Time.deltaTime;
+        }
 
-		if(_timer > _best)
-			bestTime.text = "Best: "+ _timer.ToString("F2");
+        if (infinite)
+        {
+            if (_timer > _best)
+            {
+                bestTime.text = "Best: " + _timer.ToString("F2");
+            }
+        }
 
         if(_countdownBool)
         {
@@ -237,11 +244,22 @@ public class LevelManager : MonoBehaviour
 
 	private void setBest()
 	{
-		if(_timer > _best)
-		{
-			_best = _timer;
-			bestTime.text = "Best: " + _best.ToString ("F2");
-		}
+        if (infinite)
+        {
+            if (_timer > _best)
+            {
+                _best = _timer;
+                bestTime.text = "Best: " + _best.ToString("F2");
+            }
+        }
+        else
+        {
+            if (_timer < _best)
+            {
+                _best = _timer;
+                bestTime.text = "Best: " + _best.ToString("F2");
+            }
+        }
 	}
 
 	public void doReturnToGame()
